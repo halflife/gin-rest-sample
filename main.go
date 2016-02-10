@@ -1,96 +1,106 @@
 package main
 
 import (
-	"fmt"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
-	"time"
+    "github.com/gin-gonic/gin"
+    "database/sql"
+    "github.com/coopernurse/gorp"
+    _ "github.com/mattn/go-sqlite3"
+    "log"
+    "time"
+    "strconv"
 )
 
-type Person struct {
-	ID        bson.ObjectId `bson:"_id,omitempty"`
-	Name      string
-	Timestamp time.Time
+var dbmap = initDb()
+
+func main(){
+
+    defer dbmap.Db.Close()
+
+    router := gin.Default()
+    router.GET("/users", usersList)
+    router.POST("/usersadd", userPost)
+    router.GET("/users/:id", usersDetail)
+    router.Run(":8000")
 }
 
-var (
-	IsDrop = true
-)
+type user struct {
+    Id int64 `db:"user_id"`
+    Created int64
+    Name string
+    Address string
+}
 
-func main() {
-	session, err := mgo.Dial("127.0.0.1")
-	if err != nil {
-		panic(err)
-	}
+func createuser(Name, body string) user {
+    user := user{
+        Created:    time.Now().UnixNano(),
+        Name:      Name,
+        Address:    body,
+    }
 
-	defer session.Close()
+    err := dbmap.Insert(&user)
+    checkErr(err, "Insert failed")
+    return user
+}
 
-	session.SetMode(mgo.Monotonic, true)
+func getuser(user_id int) user {
+    user := user{}
+    err := dbmap.SelectOne(&user, "select * from users where user_id=?", user_id)
+    checkErr(err, "SelectOne failed")
+    return user
+}
 
-	// Drop Database
-	if IsDrop {
-		err = session.DB("test").DropDatabase()
-		if err != nil {
-			panic(err)
-		}
-	}
+func usersList(c *gin.Context) {
+    var users []user
+    _, err := dbmap.Select(&users, "select * from users order by user_id")
+    checkErr(err, "Select failed")
+    content := gin.H{}
+    for k, v := range users {
+        content[strconv.Itoa(k)] = v
+    }
+    c.JSON(200, content)
+}
 
-	// Collection People
-	c := session.DB("test").C("people")
+func usersDetail(c *gin.Context) {
+    user_id := c.Params.ByName("id")
+    a_id, _ := strconv.Atoi(user_id)
+    user := getuser(a_id)
+    content := gin.H{"Name": user.Name, "content": user.Address}
+    c.JSON(200, content)
+}
 
-	// Index
-	index := mgo.Index{
-		Key:        []string{"name"},
-		Unique:     true,
-		DropDups:   true,
-		Background: true,
-		Sparse:     true,
-	}
+func userPost(c *gin.Context) {
+    var json user
 
-	err = c.EnsureIndex(index)
-	if err != nil {
-		panic(err)
-	}
+    c.Bind(&json) // This will infer what binder to use depending on the content-type header.
+    user := createuser(json.Name, json.Address)
+    if user.Name == json.Name {
+        content := gin.H{
+            "result": "Success",
+            "Name": user.Name,
+            "content": user.Address,
+        }
+        c.JSON(201, content)
+    } else {
+        c.JSON(500, gin.H{"result": "An error occured"})
+    }
+}
 
-	// Insert Datas
-	err = c.Insert(&Person{Name: "Ale", Timestamp: time.Now()},
-		&Person{Name: "Cla", Timestamp: time.Now()})
+func initDb() *gorp.DbMap {
+    db, err := sql.Open("sqlite3", "db.sqlite3")
+    checkErr(err, "sql.Open failed")
 
-	if err != nil {
-		panic(err)
-	}
+    dbmap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	// Query One
-	result := Person{}
-	err = c.Find(bson.M{"name": "Ale"}).One(&result)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Phone", result)
+    dbmap.AddTableWithName(user{}, "users").SetKeys(true, "Id")
 
-	// Query All
-	var results []Person
-	err = c.Find(bson.M{"name": "Ale"}).Sort("-timestamp").All(&results)
+    err = dbmap.CreateTablesIfNotExists()
+    checkErr(err, "Create tables failed")
 
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Results All: ", results)
+    return dbmap
+}
 
-	// Update
-	colQuerier := bson.M{"name": "Ale"}
-	change := bson.M{"$set": bson.M{ "timestamp": time.Now()}}
-	err = c.Update(colQuerier, change)
-	if err != nil {
-		panic(err)
-	}
-
-	// Query All
-	err = c.Find(bson.M{"name": "Ale"}).Sort("-timestamp").All(&results)
-
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Results All: ", results)
-
+func checkErr(err error, msg string) {
+    if err != nil {
+        log.Fatalln(msg, err)
+    }
 }
