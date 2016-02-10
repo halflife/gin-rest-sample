@@ -52,7 +52,7 @@ func getuser(user_id int) user {
 func usersList(c *gin.Context) {
     var users []user
     _, err := dbmap.Select(&users, "select * from users order by user_id")
-    checkErr(err, "Users doesn't exist")
+    checkErr(err, "User doesn't exist")
     content := gin.H{}
     for k, v := range users {
         content[strconv.Itoa(k)] = v
