@@ -45,14 +45,14 @@ func createuser(Name, body string) user {
 func getuser(user_id int) user {
     user := user{}
     err := dbmap.SelectOne(&user, "select * from users where user_id=?", user_id)
-    checkErr(err, "SelectOne failed")
+    checkErr(err, "User doesn't exist")
     return user
 }
 
 func usersList(c *gin.Context) {
     var users []user
     _, err := dbmap.Select(&users, "select * from users order by user_id")
-    checkErr(err, "Select failed")
+    checkErr(err, "Users doesn't exist")
     content := gin.H{}
     for k, v := range users {
         content[strconv.Itoa(k)] = v
