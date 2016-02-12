@@ -1,4 +1,10 @@
 # gin-rest-sample
+
+To run the server
+
+go run main.go
+
+
 To get results 
 
 run this in terminal
