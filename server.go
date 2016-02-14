@@ -2,7 +2,7 @@ package main
 
 import (
 	// Standard library packages
-	"net/http"
+	
 
 	// Third party packages
 	"github.com/gin-gonic/gin"
@@ -17,12 +17,12 @@ func main() {
 
 	// Get a user resource
 	router := gin.Default()
-    router.GET("/users", uc.usersList)
-    router.GET("/users/:id", uc.usersDetail)
-    router.GET("/usersdelete/:id", uc.usersDetail)
+    router.GET("/users", uc.UsersList)
+    router.GET("/users/:id", uc.GetUser)
+    router.GET("/usersdelete/:id", uc.RemoveUser)
 
-    router.POST("/usersadd", ucuserPost)
-    router.POST("/usersupdate", ucuserPost)
+    router.POST("/usersadd", uc.CreateUser)
+    router.POST("/usersupdate", uc.UpdateUser)
     
     router.Run(":8000")
 }
