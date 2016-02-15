@@ -1,5 +1,7 @@
 package main
 
+//created by H.G Nuwan Indika 
+
 import (
 	// Standard library packages
 	
@@ -19,7 +21,7 @@ func main() {
 	router := gin.Default()
     router.GET("/users", uc.UsersList)
     router.GET("/users/:id", uc.GetUser)
-    router.GET("/usersdelete/:id", uc.RemoveUser)
+    router.GET("/usersdeletels/:id", uc.RemoveUser)
 
     router.POST("/usersadd", uc.CreateUser)
     router.POST("/usersupdate/:id", uc.UpdateUser)

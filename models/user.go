@@ -1,5 +1,7 @@
 package models
 
+//created by H.G Nuwan Indika 
+
 import "gopkg.in/mgo.v2/bson"
 
 type (

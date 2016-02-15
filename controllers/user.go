@@ -1,5 +1,7 @@
 package controllers
 
+// created by H.G Nuwan Indika 
+
 import (
 
 	"log"
@@ -18,8 +20,8 @@ type (
 )
 
 const (
-    DB_NAME       = "gotest"
-    DB_COLLECTION = "pepole_new"
+    DB_NAME       = "halflife"
+    DB_COLLECTION = "pepole"
 )
 
 // NewUserController provides a reference to a UserController with provided mongo session
