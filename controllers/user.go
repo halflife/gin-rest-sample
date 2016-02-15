@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
-	"log"
-	"strconv"
 
+	"log"
+	
 	"github.com/gin-gonic/gin"
 	"../models"
 	"gopkg.in/mgo.v2"
@@ -20,7 +19,7 @@ type (
 
 const (
     DB_NAME       = "gotest"
-    DB_COLLECTION = "pepole_new1"
+    DB_COLLECTION = "pepole_new"
 )
 
 // NewUserController provides a reference to a UserController with provided mongo session
@@ -28,24 +27,61 @@ func NewUserController(s *mgo.Session) *UserController {
 	return &UserController{s}
 }
 
+
+
 func checkErr(err error, msg string) {
     if err != nil {
         log.Fatalln(msg, err)
     }
 }
 
+func messageTypeDefault(msg string,c *gin.Context) {
+        content := gin.H{
+            "result": msg,
+        }
+        c.Writer.Header().Set("Content-Type", "application/json")
+        c.JSON(201, content)
+    
+}
+
+func checkErrTypeOne(err error, msg string, status string , c *gin.Context) {
+    if err != nil {
+    	panic(err)
+    	 log.Fatalln(msg, err)
+        content := gin.H{
+			"status": status,
+            "result": msg,
+        }
+        c.Writer.Header().Set("Content-Type", "application/json")
+        c.JSON(201, content)
+
+    }
+}
+
+func checkErrTypeTwo(msg string, status string , c *gin.Context) {
+        content := gin.H{
+			"status": status,
+            "result": msg,
+        }
+        c.Writer.Header().Set("Content-Type", "application/json")
+        c.JSON(201, content)
+}
+
+
+
 
 
 // Get all Users
 func (uc UserController) UsersList(c *gin.Context) {
+	
 	var results []models.User
     err := uc.session.DB(DB_NAME).C(DB_COLLECTION).Find(nil).All(&results)
-	checkErr(err, "Users doesn't exist")
-    content := gin.H{}
-    for k, v := range results {
-        content[strconv.Itoa(k)] = v
-    }
-    c.JSON(200, content)
+    if err != nil{
+		checkErrTypeOne(err, "Users doesn't exist","404",c)
+		return
+	}
+  
+    c.JSON(200, results)
 }
 
 // GetUser retrieves an individual user resource
@@ -55,29 +91,23 @@ func (uc UserController) GetUser(c *gin.Context) {
 	
 	 //Verify id is ObjectId, otherwise bail
 	if !bson.IsObjectIdHex(id) {
-		c.AbortWithStatus(404)
+		checkErrTypeTwo("ID is not a bson.ObjectId","404",c)
 		return
 	}
-
 	// Grab id
 	oid := bson.ObjectIdHex(id)
 
 	// Stub user
 	u := models.User{}
-
+	err := uc.session.DB(DB_NAME).C(DB_COLLECTION).FindId(oid).One(&u)
 	// Fetch user
-	if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).FindId(oid).One(&u); err != nil {
-		checkErr(err, "Users doesn't exist")
-		c.AbortWithStatus(403)
-
+	if err != nil {
+		checkErrTypeTwo("Users doesn't exist","403",c)
 		return
 	}
 
-	// Marshal provided interface into JSON structure
-	uj, _ := json.Marshal(u)
-
 	c.Writer.Header().Set("Content-Type", "application/json")
-    c.JSON(200, uj)
+    c.JSON(200, u)
 }
 
 // CreateUser creates a new user resource
@@ -88,10 +118,7 @@ func (uc UserController) CreateUser(c *gin.Context) {
     // This will infer what binder to use depending on the content-type header.
     c.Bind(&json) 
 
-	// Stub an user to be populated from the body
-	//u := models.User{}
-
-	u := uc.create_user(json.Name, json.Gender,json.Age)
+	u := uc.create_user(json.Name, json.Gender,json.Age,c)
     if u.Name == json.Name {
         content := gin.H{
             "result": "Success",
@@ -114,23 +141,21 @@ func (uc UserController) RemoveUser(c *gin.Context) {
 	id := c.Params.ByName("id")
 
 	// Verify id is ObjectId, otherwise bail
-	if !bson.IsObjectIdHex(id) {
-		c.AbortWithStatus(404)
+	if !bson.IsObjectIdHex(id){
+		checkErrTypeTwo("ID is not a bson.ObjectId","404",c)
 		return
 	}
-
 	// Grab id
 	oid := bson.ObjectIdHex(id)
-
+	
 	// Remove user
-	if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).RemoveId(oid); err != nil {
-		checkErr(err,"Fail to Remove")
-		c.AbortWithStatus(404)
+	if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).RemoveId(oid); err != nil{
+		checkErrTypeOne(err,"Fail to Remove","403",c)
 		return
 	}
 
-	// Write status
-	c.AbortWithStatus(200)
+	messageTypeDefault("Success",c)
+		
 }
 
 
@@ -143,19 +168,16 @@ func (uc UserController) UpdateUser(c *gin.Context) {
     // This will infer what binder to use depending on the content-type header.
     c.Bind(&json) 
 
-	// Stub an user to be populated from the body
-	//u := models.User{}
-
 	// Verify id is ObjectId, otherwise bail
 	if !bson.IsObjectIdHex(id) {
-		c.AbortWithStatus(404)
+		checkErrTypeTwo("ID is not a bson.ObjectId","404",c)
 		return
 	}
 
 	// Grab id
-	oid := bson.ObjectIdHex(id)
+	
+	u := uc.update_user(id,json.Name, json.Gender,json.Age,c)
 
-	u := uc.update_user(oid,json.Name, json.Gender,json.Age)
     if u.Name == json.Name {
         content := gin.H{
             "result": "Success",
@@ -171,10 +193,10 @@ func (uc UserController) UpdateUser(c *gin.Context) {
     }
 
 	// Write status
-	c.AbortWithStatus(200)
+	//c.AbortWithStatus(200)
 }
 
-func (uc UserController) create_user(Name string, Gender string,Age int) models.User {
+func (uc UserController) create_user(Name string, Gender string,Age int, c *gin.Context) models.User {
     user := models.User{
         Name:      Name,
         Gender:    Gender,
@@ -182,28 +204,25 @@ func (uc UserController) create_user(Name string, Gender string,Age int) models.
     }
     // Write the user to mongo
 	err := uc.session.DB(DB_NAME).C(DB_COLLECTION).Insert(&user)
-    checkErr(err, "Insert failed")
+    checkErrTypeOne(err, "Insert failed","403",c)
     return user
 }
 
-func (uc UserController) update_user(Id bson.ObjectId,Name string, Gender string,Age int) models.User {
+func (uc UserController) update_user(Id string,Name string, Gender string,Age int, c *gin.Context) models.User {
 
     user := models.User{
-    	Id: 	Id,
+
         Name:      Name,
         Gender:    Gender,
         Age:	Age,
     }
 
-    // Push a item to the Array in the Collection by Collection's ObjectId
     
-    change := bson.M{"$push": bson.M{"sections": bson.M{"Name":user.Name,"Gender":user.Gender,"Age":user.Age}}}
-    
+    oid := bson.ObjectIdHex(Id)
     // Write the user to mongo
-    if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).Update(Id, bson.M{"$push": change}); err != nil {
-		checkErr(err,"Update failed")
-		//c.AbortWithStatus(404)
-		//return
+    if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).UpdateId(oid, &user); err != nil {
+		checkErrTypeOne(err,"Update failed","403",c)
+		
 	}
 
     return user

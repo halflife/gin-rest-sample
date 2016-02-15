@@ -22,7 +22,7 @@ func main() {
     router.GET("/usersdelete/:id", uc.RemoveUser)
 
     router.POST("/usersadd", uc.CreateUser)
-    router.POST("/usersupdate", uc.UpdateUser)
+    router.POST("/usersupdate/:id", uc.UpdateUser)
     
     router.Run(":8000")
 }
