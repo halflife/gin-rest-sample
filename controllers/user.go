@@ -10,6 +10,7 @@ import (
 	"../models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+    //"strconv"
 )
 
 type (
@@ -39,6 +40,7 @@ func checkErr(err error, msg string) {
 
 func messageTypeDefault(msg string,c *gin.Context) {
         content := gin.H{
+            "status": "200",
             "result": msg,
         }
         c.Writer.Header().Set("Content-Type", "application/json")
@@ -55,7 +57,7 @@ func checkErrTypeOne(err error, msg string, status string , c *gin.Context) {
             "result": msg,
         }
         c.Writer.Header().Set("Content-Type", "application/json")
-        c.JSON(201, content)
+        c.JSON(200, content)
 
     }
 }
@@ -66,11 +68,8 @@ func checkErrTypeTwo(msg string, status string , c *gin.Context) {
             "result": msg,
         }
         c.Writer.Header().Set("Content-Type", "application/json")
-        c.JSON(201, content)
+        c.JSON(200, content)
 }
-
-
-
 
 
 // Get all Users
@@ -104,7 +103,7 @@ func (uc UserController) GetUser(c *gin.Context) {
 	err := uc.session.DB(DB_NAME).C(DB_COLLECTION).FindId(oid).One(&u)
 	// Fetch user
 	if err != nil {
-		checkErrTypeTwo("Users doesn't exist","403",c)
+		checkErrTypeTwo("Users doesn't exist","404",c)
 		return
 	}
 
@@ -152,7 +151,7 @@ func (uc UserController) RemoveUser(c *gin.Context) {
 	
 	// Remove user
 	if err := uc.session.DB(DB_NAME).C(DB_COLLECTION).RemoveId(oid); err != nil{
-		checkErrTypeOne(err,"Fail to Remove","403",c)
+		checkErrTypeOne(err,"Fail to Remove","404",c)
 		return
 	}
 

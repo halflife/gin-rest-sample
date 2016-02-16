@@ -27,12 +27,12 @@ View buy ID
   
 Add values
 
-  curl -H "Content-Type: application/json" -d '{"name":"Amila","gender":"Female", "Age":34}' http://128.199.141.149:8000/usersadd
+  curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"name":"Amila","gender":"Female", "Age":34}' 	          http://128.199.141.149:8000/usersadd
 
 update values
 
-  curl -H "Content-Type: application/json" -d '{"name":"Amila","gender":"male", "Age":34}' http://128.199.141.149:8000/usersupdate/{oid}
+  curl -v -H "Accept: application/json" -H "Content-type: application/json" -X PUT -d '{"name":"Amila","gender":"male", "Age":34}' http://128.199.141.149:8000/usersupdate/{oid}
 
 Remove a data
 
-  curl http://128.199.141.149:8000/usersdelete/{oid}
+  curl -i -H "Accept: application/json" -X DELETE http://128.199.141.149:8000/usersdelete/{oid}
