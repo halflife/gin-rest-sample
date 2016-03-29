@@ -1,38 +1,26 @@
 # gin-rest-sample
 
-you need to import following packages
+	##you need to import following packages
 
-  go get github.com/gin-gonic/gin
+  		1.go get github.com/gin-gonic/gin
 
-  go get gopkg.in/mgo.v2
+  		2.go get gopkg.in/mgo.v2
 
-  go get gopkg.in/mgo.v2/bson
+  		3.go get gopkg.in/mgo.v2/bson
 
-To run the server
+	##To run the server
 
-  go run server.go
+  		1.go run server.go
 
 
-To get results 
+  	## Routs
 
-run this in terminal
+  		1.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET http://128.199.141.149:8000/users 
 
-View all data
+  		2.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET http://128.199.141.149:8000/users/{oid}
 
-  curl http://128.199.141.149:8000/users 
- 
-View buy ID
+  		3.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"name":"Amila","gender":"Female", "Age":34}' 	          http://128.199.141.149:8000/usersadd
+		4.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X PUT -d '{"name":"Amila","gender":"male", "Age":34}' http://128.199.141.149:8000/usersupdate/{oid}
 
-  curl http://128.199.141.149:8000/users/{oid}
-  
-Add values
+  		5.curl -i -H "Accept: application/json" -X DELETE http://128.199.141.149:8000/usersdelete/{oid}
 
-  curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"name":"Amila","gender":"Female", "Age":34}' 	          http://128.199.141.149:8000/usersadd
-
-update values
-
-  curl -v -H "Accept: application/json" -H "Content-type: application/json" -X PUT -d '{"name":"Amila","gender":"male", "Age":34}' http://128.199.141.149:8000/usersupdate/{oid}
-
-Remove a data
-
-  curl -i -H "Accept: application/json" -X DELETE http://128.199.141.149:8000/usersdelete/{oid}
