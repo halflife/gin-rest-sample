@@ -45,7 +45,6 @@ func messageTypeDefault(msg string,c *gin.Context) {
         }
         c.Writer.Header().Set("Content-Type", "application/json")
         c.JSON(201, content)
-    
 }
 
 func checkErrTypeOne(err error, msg string, status string , c *gin.Context) {
