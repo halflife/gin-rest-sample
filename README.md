@@ -19,7 +19,7 @@
 
   		2.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET http://128.199.141.149:8000/users/{oid}
 
-  		3.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"name":"Amila","gender":"Female", "Age":34}' 	          http://128.199.141.149:8000/usersadd
+  		3.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"name":"Amila","gender":"Female", "Age":34}' http://128.199.141.149:8000/usersadd
   		
 		4.curl -v -H "Accept: application/json" -H "Content-type: application/json" -X PUT -d '{"name":"Amila","gender":"male", "Age":34}' http://128.199.141.149:8000/usersupdate/{oid}
 
